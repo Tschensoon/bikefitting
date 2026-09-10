@@ -72,6 +72,16 @@ COLOR_BGR = {
 }
 
 
+def flex(joint_angle):
+    """
+    Wandelt den geometrischen Gelenk-Innenwinkel in den in der Bikefit-Literatur
+    üblichen Beugewinkel um (0° = Gelenk ganz gestreckt). Nur für Knie und
+    Ellbogen nötig, da deren Zielbereiche (z.B. Holmes-Methode) als Beugung
+    ab Streckung angegeben sind, nicht als Innenwinkel der Gliedmaßen.
+    """
+    return 180.0 - joint_angle
+
+
 def angle_at(a, b, c):
     """Winkel am Punkt b, gebildet durch die Strahlen b->a und b->c, in Grad."""
     a, b, c = np.array(a, float), np.array(b, float), np.array(c, float)
@@ -279,10 +289,16 @@ def main():
     print(f"{len(utp_frames_with_valid_angles)} untere Totpunkte erkannt "
           f"(von {len(utp_candidates)} Kandidaten).")
 
+    # "knee"/"elbow" werden hier von Gelenk-Innenwinkeln in Beugewinkel
+    # (0° = gestreckt) umgerechnet, weil die Zielbereiche aus der Literatur
+    # (Holmes-Methode) so definiert sind. Für die Suche nach dem unteren
+    # Totpunkt oben wurde bewusst noch der rohe Innenwinkel verwendet.
     metrics = {k: [] for k in ("knee", "elbow", "shoulder", "hip", "torso")}
     for fi in utp_frames_with_valid_angles:
         res = angle_cache[fi]
-        for k in metrics:
+        metrics["knee"].append(flex(res["knee"]))
+        metrics["elbow"].append(flex(res["elbow"]))
+        for k in ("shoulder", "hip", "torso"):
             metrics[k].append(res[k])
 
     medians = {k: statistics.median(v) for k, v in metrics.items()}
@@ -291,7 +307,7 @@ def main():
 
     rep_frame_idx = min(
         utp_frames_with_valid_angles,
-        key=lambda fi: abs(angle_cache[fi]["knee"] - medians["knee"]),
+        key=lambda fi: abs(flex(angle_cache[fi]["knee"]) - medians["knee"]),
     )
 
     print("\nPass 2/2: Zeichne farbiges Skelett auf gesamten Clip ...")
@@ -306,11 +322,11 @@ def main():
             if pose is not None:
                 res = angle_cache.get(i)
                 if res is not None:
-                    arm_color = worse_of(classify(res["shoulder"], "shoulder"), classify(res["elbow"], "elbow"))
+                    arm_color = worse_of(classify(res["shoulder"], "shoulder"), classify(flex(res["elbow"]), "elbow"))
                     seg_colors = {
                         "arm": arm_color,
                         "torso": classify(res["torso"], "torso"),
-                        "knee": classify(res["knee"], "knee"),
+                        "knee": classify(flex(res["knee"]), "knee"),
                     }
                 else:
                     seg_colors = {"arm": "gray", "torso": "gray", "knee": "gray"}
