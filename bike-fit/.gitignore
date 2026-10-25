@@ -3,3 +3,4 @@ output*/*
 !input/.gitkeep
 !output/.gitkeep
 *.pt
+__pycache__/
