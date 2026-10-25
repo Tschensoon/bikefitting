@@ -44,14 +44,33 @@ CONF_THRESH = 0.35
 # ---------------------------------------------------------------------------
 # Zielbereiche (grün) mit ca. 2.5 Grad Toleranz an den Rändern für die
 # gelbe (grenzwertige) Zone. Alles außerhalb ist rot.
+#
+# Knie- und Ellbogenbeugung sind biomechanische Vorgaben (Sattelhöhe relativ
+# zur Beinlänge bzw. Ellbogen-Federung), die unabhängig vom Radtyp gelten
+# und daher in beiden Profilen identisch sind. Nur der Oberkörperwinkel
+# unterscheidet sich bewusst zwischen aggressiver Rennrad-Position und der
+# aufrechteren, komfortorientierten Gravel-/Endurance-Geometrie - dort ist
+# ein höherer (aufrechterer) Winkel kein Fit-Fehler, sondern Absicht des
+# Rahmens. Schulter- und Hüftwinkel bleiben mangels belastbarer
+# gravel-spezifischer Quellen unverändert (siehe Quellenangaben im Bericht).
 # ---------------------------------------------------------------------------
-RANGES = {
-    "knee": {"green": (30, 40), "label": "Kniebeugung unten"},
-    "torso": {"green": (40, 50), "label": "Oberkörper zur Horizontalen"},
-    "elbow": {"green": (15, 30), "label": "Ellbogenbeugung"},
-    "shoulder": {"green": (80, 95), "label": "Schulterwinkel"},
-    "hip": {"green": (85, 110), "label": "Hüftwinkel oben (nur Info)"},
+PROFILES = {
+    "road": {
+        "knee": {"green": (30, 40), "label": "Kniebeugung unten"},
+        "torso": {"green": (40, 50), "label": "Oberkörper zur Horizontalen"},
+        "elbow": {"green": (15, 30), "label": "Ellbogenbeugung"},
+        "shoulder": {"green": (80, 95), "label": "Schulterwinkel"},
+        "hip": {"green": (85, 110), "label": "Hüftwinkel oben (nur Info)"},
+    },
+    "gravel": {
+        "knee": {"green": (30, 40), "label": "Kniebeugung unten"},
+        "torso": {"green": (55, 70), "label": "Oberkörper zur Horizontalen (Gravel/Endurance)"},
+        "elbow": {"green": (15, 30), "label": "Ellbogenbeugung"},
+        "shoulder": {"green": (80, 95), "label": "Schulterwinkel"},
+        "hip": {"green": (85, 110), "label": "Hüftwinkel oben (nur Info)"},
+    },
 }
+RANGES = PROFILES["road"]  # wird in main() per --profile überschrieben
 YELLOW_MARGIN = 2.5
 
 
@@ -221,12 +240,17 @@ def reencode_h264(src_path: Path, dst_path: Path):
 
 
 def main():
+    global RANGES
     ap = argparse.ArgumentParser(description="Bikefit-Analyse aus seitlichem Video")
     ap.add_argument("video", type=str, help="Pfad zum Eingabevideo (seitliche Ansicht)")
     ap.add_argument("--outdir", type=str, default=str(Path(__file__).parent / "output"))
     ap.add_argument("--model", type=str, default="yolo11x-pose.pt")
     ap.add_argument("--device", type=str, default="cpu")
+    ap.add_argument("--profile", type=str, choices=sorted(PROFILES), default="road",
+                     help="Zielbereiche: 'road' (aggressive Rennradposition) oder "
+                          "'gravel' (aufrechtere Gravel-/Endurance-Geometrie)")
     args = ap.parse_args()
+    RANGES = PROFILES[args.profile]
 
     video_path = Path(args.video)
     outdir = Path(args.outdir)
@@ -343,7 +367,7 @@ def main():
     raw_out_path.unlink(missing_ok=True)
 
     report_path = outdir / "bikefit_report.txt"
-    write_report(report_path, medians, classes, side, len(utp_frames_with_valid_angles))
+    write_report(report_path, medians, classes, side, len(utp_frames_with_valid_angles), args.profile)
 
     print(f"\nFertig.\nVideo:   {final_video_path}\nBild:    {still_path}\nBericht: {report_path}")
 
@@ -353,10 +377,13 @@ def worse_of(status_a, status_b):
     return status_a if order[status_a] >= order[status_b] else status_b
 
 
-def write_report(path: Path, medians, classes, side, n_utp):
+def write_report(path: Path, medians, classes, side, n_utp, profile):
     lines = []
     lines.append("BIKEFIT-ANALYSE – ZUSAMMENFASSUNG")
     lines.append("=" * 40)
+    profile_label = {"road": "Rennrad (aggressive Position)",
+                      "gravel": "Gravel/Endurance (aufrechtere Position)"}[profile]
+    lines.append(f"Profil: {profile_label}")
     lines.append(f"Ausgewertete Körperseite (kamerazugewandt): {side}")
     lines.append(f"Anzahl ausgewerteter unterer Totpunkte: {n_utp}")
     lines.append("")
@@ -427,6 +454,12 @@ def write_report(path: Path, medians, classes, side, n_utp):
     lines.append("")
     lines.append("Quellen: Holmes-Methode / Bini et al. (PMC9219349), dynamische vs. statische")
     lines.append("Validität (PMID 24499342), Bikefit Adviser Praxis-Gegencheck.")
+    if profile == "gravel":
+        lines.append("Oberkörper-Zielbereich Gravel/Endurance: abgeleitet aus Pedalyze")
+        lines.append("Road-Bike-Fit-Referenz (Endurance am oberen Ende des Toleranzbereichs)")
+        lines.append("und allgemeinem Konsens zu Endurance-/Gravel-Geometrie (road.cc, CT Yeh).")
+        lines.append("Weniger streng belegt als die übrigen (Knie/Ellbogen unverändert zum")
+        lines.append("Rennrad-Profil, da radtyp-unabhängig).")
 
     path.write_text("\n".join(lines), encoding="utf-8")
 
