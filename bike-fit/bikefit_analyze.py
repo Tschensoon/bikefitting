@@ -379,11 +379,11 @@ def write_report(path: Path, medians, classes, side, n_utp):
     knee = medians["knee"]
     if classes["knee"] == "red" and knee > RANGES["knee"]["green"][1]:
         mm = round((knee - RANGES["knee"]["green"][1]) * 3)
-        lines.append(f"- Knie {knee:.0f}° unten (zu gestreckt) -> Sattel zu tief. "
+        lines.append(f"- Knie {knee:.0f}° unten (zu stark gebeugt) -> Sattel zu tief. "
                       f"Sattel ca. {max(mm,5)}-{max(mm,5)+5}mm höher stellen.")
     elif classes["knee"] == "red" and knee < RANGES["knee"]["green"][0]:
         mm = round((RANGES["knee"]["green"][0] - knee) * 3)
-        lines.append(f"- Knie {knee:.0f}° unten (zu stark gebeugt) -> Sattel zu hoch. "
+        lines.append(f"- Knie {knee:.0f}° unten (zu gestreckt) -> Sattel zu hoch. "
                       f"Sattel ca. {max(mm,5)}-{max(mm,5)+5}mm tiefer stellen.")
     elif classes["knee"] == "yellow":
         lines.append(f"- Knie {knee:.0f}° unten liegt an der Grenze des Zielbereichs "
