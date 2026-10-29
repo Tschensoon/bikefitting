@@ -156,6 +156,29 @@ legend{font-size:11.5px;font-weight:700;color:var(--muted);padding:0;margin-bott
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 .head-actions{display:flex;gap:6px;align-items:center}
+#notesBtn{padding:8px 12px}
+#notesBtn .count{background:var(--card-hi)}
+dialog.wide{max-width:720px}
+.notes-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.notes-head h2{margin:0}
+.notes-layout{display:grid;grid-template-columns:200px minmax(0,1fr);gap:10px;min-height:300px}
+.note-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;overflow-y:auto;max-height:360px}
+.note-list button{width:100%;text-align:left;border:1px solid transparent;background:none;border-radius:9px;padding:8px 10px;display:grid;gap:2px;color:var(--fg)}
+.note-list button:hover{background:var(--card-hi)}
+.note-list button.on{background:var(--card);border-color:var(--accent)}
+.note-list b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.note-list small{font-size:11px;color:var(--muted)}
+.note-list .empty{border:1px dashed var(--line);padding:14px 10px;text-align:center}
+.note-editor{display:flex;flex-direction:column;gap:6px;min-width:0}
+.note-editor textarea{flex:1;min-height:280px;resize:vertical;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;font:inherit;font-size:14px;line-height:1.5;color:var(--fg);width:100%}
+.note-status{font-size:11.5px;color:var(--muted);min-height:1em}
+.note-status.dirty{color:var(--high)}
+@media (max-width:620px){
+  #notesBtn span:not(.count){display:none}
+  .notes-layout{grid-template-columns:1fr}
+  .note-list{max-height:150px}
+  .note-editor textarea{min-height:200px}
+}
 .foot{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding-top:12px;margin-top:4px}
 .foot .btns{display:flex;gap:6px;flex-wrap:wrap}
 .zoom{display:flex;align-items:center;border:1px solid var(--line);background:var(--card);border-radius:999px;overflow:hidden}
@@ -176,6 +199,7 @@ legend{font-size:11.5px;font-weight:700;color:var(--muted);padding:0;margin-bott
     </div>
     <div class="head-actions">
       <button class="icon-btn" id="themeBtn" aria-label="Hell oder dunkel umschalten"></button>
+      <button class="btn" id="notesBtn" aria-label="Notizen öffnen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg><span>Notiz</span><span class="count" id="notesCount" hidden></span></button>
     <button class="btn-primary" id="newTask" aria-label="Neue Aufgabe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span>Neu</span></button>
     </div>
   </header>
@@ -212,6 +236,28 @@ legend{font-size:11.5px;font-weight:700;color:var(--muted);padding:0;margin-bott
     </div>
   </footer>
 </div>
+
+<dialog id="notesDlg" class="wide" aria-labelledby="notesTitle">
+  <div class="form">
+    <div class="notes-head">
+      <h2 id="notesTitle">Notizen</h2>
+      <button type="button" class="btn" id="noteNew"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Neue Notiz</button>
+    </div>
+    <div class="notes-layout">
+      <ul class="note-list" id="noteList" aria-label="Gespeicherte Notizen"></ul>
+      <div class="note-editor">
+        <textarea id="noteText" maxlength="10000" placeholder="Notiz schreiben … Die erste Zeile wird zur Überschrift." aria-label="Notiztext"></textarea>
+        <div class="note-status" id="noteStatus"></div>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button type="button" class="btn danger" id="noteDelete" hidden>Löschen</button>
+      <button type="button" class="btn" id="noteToTask" title="Aus dieser Notiz eine Aufgabe machen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>In Aufgabe umwandeln</button>
+      <button type="button" class="btn" id="noteClose">Schließen</button>
+      <button type="button" class="btn-primary" id="noteSave">Speichern</button>
+    </div>
+  </div>
+</dialog>
 
 <dialog id="custom" aria-labelledby="customTitle">
   <div class="form">
@@ -529,10 +575,98 @@ $("fText").addEventListener("input", render);
 function saveUi() { try { localStorage.setItem(LS + "-tab", activeCol); } catch (e) {} }
 try { activeCol = localStorage.getItem(LS + "-tab") || activeCol; } catch (e) {}
 
+/* ---------- Notizen (getrennt von den Aufgaben gespeichert) ---------- */
+
+const NOTES_KEY = LS + "-notes";
+let notes = [];
+try { const n = JSON.parse(localStorage.getItem(NOTES_KEY) || "[]"); if (Array.isArray(n)) notes = n; } catch (e) {}
+let noteId = null;      // offene Notiz, null = neue, noch nicht gespeichert
+let noteSaved = "";     // Text beim letzten Speichern, um Änderungen zu erkennen
+let confirmLeave = null;
+
+function saveNotes() {
+  try { localStorage.setItem(NOTES_KEY, JSON.stringify(notes)); } catch (e) { flash("Notiz konnte nicht gespeichert werden."); }
+}
+function showNotesCount() { $("notesCount").hidden = !notes.length; $("notesCount").textContent = notes.length; }
+const noteHeading = (text) => (text.trim().split("\n")[0] || "Ohne Überschrift").slice(0, 80);
+const noteDate = (ts) => new Date(ts).toLocaleString("de-DE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+const noteDirty = () => $("noteText").value !== noteSaved;
+
+function renderNoteList() {
+  const sorted = [...notes].sort((a, b) => b.updatedAt - a.updatedAt);
+  $("noteList").innerHTML = sorted.map((n) => `<li><button type="button" data-note="${esc(n.id)}" class="${n.id === noteId ? "on" : ""}"><b>${esc(noteHeading(n.text))}</b><small>${noteDate(n.updatedAt)}</small></button></li>`).join("")
+    || '<li class="empty note-status">Noch keine Notizen gespeichert.</li>';
+}
+function showNoteState(msg) {
+  const st = $("noteStatus");
+  if (msg) { st.textContent = msg; st.classList.remove("dirty"); return; }
+  st.classList.toggle("dirty", noteDirty());
+  st.textContent = noteDirty() ? "Nicht gespeicherte Änderungen" : noteId ? "Gespeichert" : "";
+  $("noteDelete").hidden = !noteId;
+}
+function loadNote(id) {
+  const n = notes.find((x) => x.id === id);
+  noteId = n ? n.id : null; noteSaved = n ? n.text : "";
+  $("noteText").value = noteSaved;
+  confirmLeave = null; renderNoteList(); showNoteState();
+  $("noteDelete").classList.remove("armed"); $("noteDelete").textContent = "Löschen";
+  $("noteText").focus();
+}
+// Vor dem Wechseln mit ungespeicherten Änderungen einmal nachfragen (zweiter Klick bestätigt)
+function guard(key, action) {
+  if (!noteDirty() || confirmLeave === key) { confirmLeave = null; return action(); }
+  confirmLeave = key;
+  const st = $("noteStatus"); st.classList.add("dirty");
+  st.textContent = "Nicht gespeichert. Nochmal klicken, um die Änderungen zu verwerfen, oder erst speichern.";
+}
+function saveNote() {
+  const text = $("noteText").value;
+  if (!text.trim()) { showNoteState("Die Notiz ist leer."); return false; }
+  if (noteId) { const n = notes.find((x) => x.id === noteId); n.text = text; n.updatedAt = Date.now(); }
+  else { noteId = newId(); notes.push({ id: noteId, text, updatedAt: Date.now() }); }
+  noteSaved = text; saveNotes(); showNotesCount(); renderNoteList(); showNoteState("Gespeichert um " + new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }));
+  $("noteDelete").hidden = false;
+  return true;
+}
+
+$("notesBtn").onclick = () => {
+  $("notesDlg").showModal();
+  loadNote([...notes].sort((a, b) => b.updatedAt - a.updatedAt)[0]?.id ?? null);
+};
+$("noteText").addEventListener("input", () => { confirmLeave = null; showNoteState(); });
+$("noteText").addEventListener("keydown", (e) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") { e.preventDefault(); saveNote(); } });
+$("noteSave").onclick = saveNote;
+$("noteNew").onclick = () => guard("new", () => loadNote(null));
+$("noteList").addEventListener("click", (e) => { const b = e.target.closest("[data-note]"); if (b && b.dataset.note !== noteId) guard("open:" + b.dataset.note, () => loadNote(b.dataset.note)); });
+$("noteClose").onclick = () => guard("close", () => $("notesDlg").close());
+$("notesDlg").addEventListener("cancel", (e) => { if (noteDirty() && confirmLeave !== "close") { e.preventDefault(); guard("close", () => {}); } });
+$("noteDelete").onclick = () => {
+  const b = $("noteDelete");
+  if (!b.classList.contains("armed")) { b.classList.add("armed"); b.textContent = "Wirklich löschen?"; return; }
+  notes = notes.filter((n) => n.id !== noteId); saveNotes(); showNotesCount();
+  loadNote([...notes].sort((a, b) => b.updatedAt - a.updatedAt)[0]?.id ?? null);
+  showNoteState("Notiz gelöscht.");
+};
+// Erste Zeile wird Titel, der Rest kommt in die Notizen der Aufgabe. Die Notiz wird danach entfernt.
+$("noteToTask").onclick = () => {
+  const text = $("noteText").value.trim();
+  if (!text) { showNoteState("Die Notiz ist leer."); return; }
+  const [first, ...rest] = text.split("\n");
+  const task = { id: newId(), title: first.trim().slice(0, 140) || "Neue Aufgabe", notes: rest.join("\n").trim(), project: $("fProject").value || "Allgemein", who: "", status: "today", priority: "normal", due: "", subDone: 0, subTotal: 0, doneAt: 0 };
+  if (noteId) { notes = notes.filter((n) => n.id !== noteId); saveNotes(); showNotesCount(); }
+  noteId = null; noteSaved = ""; $("noteText").value = "";
+  $("notesDlg").close();
+  upsert(task);
+  activeCol = "today"; saveUi(); render();
+  flash("Notiz in eine Aufgabe umgewandelt.");
+  openDlg(task);
+};
+showNotesCount();
+
 /* ---------- Sicherung ---------- */
 
 $("exportBtn").onclick = () => {
-  const blob = new Blob([JSON.stringify({ app: "aufgaben-board", version: 1, exported: new Date().toISOString(), tasks }, null, 2)], { type: "application/json" });
+  const blob = new Blob([JSON.stringify({ app: "aufgaben-board", version: 1, exported: new Date().toISOString(), tasks, notes }, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = `aufgaben-${new Date().toISOString().slice(0, 10)}.json`;
@@ -547,10 +681,13 @@ $("importFile").onchange = async (e) => {
     const data = JSON.parse(await f.text());
     const list = Array.isArray(data) ? data : data.tasks;
     if (!Array.isArray(list)) throw new Error();
+    const importedNotes = Array.isArray(data.notes) ? data.notes.filter((n) => n && typeof n.text === "string").map((n) => ({ ...n, id: String(n.id || newId()) })) : [];
+    const noteIds = new Set(importedNotes.map((n) => n.id));
+    notes = [...notes.filter((n) => !noteIds.has(n.id)), ...importedNotes]; saveNotes(); showNotesCount();
     const clean = list.filter((t) => t && typeof t.title === "string").map((t) => ({ ...t, id: String(t.id || newId()) }));
     const ids = new Set(clean.map((t) => t.id));
     tasks = [...tasks.filter((t) => !ids.has(t.id)), ...clean];
-    persist(); render(); flash(`${clean.length} Aufgaben aus der Sicherung geladen.`);
+    persist(); render(); flash(`${clean.length} Aufgaben${importedNotes.length ? ` und ${importedNotes.length} Notizen` : ""} aus der Sicherung geladen.`);
   } catch (err) { flash("Die Datei ist keine gültige Sicherung des Aufgaben-Boards."); }
 };
 
