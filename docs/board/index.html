@@ -222,7 +222,18 @@ dialog.xl{max-width:1180px}
 .zoom button:disabled{color:var(--faint);cursor:default;background:none}
 #zoomReset{font-size:12px;font-weight:600;color:var(--muted);min-width:56px;font-variant-numeric:tabular-nums;border-inline:1px solid var(--line)}
 .privacy{font-size:11.5px;color:var(--faint);margin:0;max-width:60ch}
-@media (min-width:760px){.app{max-width:1400px;margin:0 auto}}
+@media (min-width:760px){
+  .app{max-width:1400px;margin:0 auto}
+  /* Ganze Seite passt in das Fenster, gescrollt wird nur innerhalb der Spalten.
+     --z gleicht den Größenregler aus, der die Seite per zoom skaliert. */
+  .app{height:calc(100vh / var(--z,1));height:calc(100dvh / var(--z,1));overflow:hidden}
+  .app > *{flex-shrink:0}
+  .app > .board{flex:1 1 auto;min-height:0;align-items:stretch;grid-template-rows:minmax(0,1fr)}
+  .col,.col:not(.active){min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+  .col > *{flex-shrink:0}
+  .col-h{position:sticky;top:-10px;z-index:1;background:var(--panel);margin:-10px -10px 0;padding:12px 14px 8px}
+  .note:empty{display:none}
+}
 </style>
 </head>
 <body>
@@ -851,6 +862,7 @@ const ZOOMS = [0.7, 0.8, 0.9, 1, 1.1, 1.25, 1.4, 1.6];
 let zoom = 1;
 function applyZoom() {
   document.documentElement.style.zoom = zoom;
+  document.documentElement.style.setProperty("--z", zoom);
   $("zoomReset").textContent = Math.round(zoom * 100) + " %";
   $("zoomOut").disabled = zoom <= ZOOMS[0];
   $("zoomIn").disabled = zoom >= ZOOMS[ZOOMS.length - 1];
