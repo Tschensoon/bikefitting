@@ -64,7 +64,7 @@ h1{margin:0;font-size:24px;font-weight:800;letter-spacing:-.02em}
 .chip select option{background:var(--card);color:var(--fg)}
 .chip.on{border-color:var(--accent);color:var(--accent)}
 
-.tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:3px}
+.tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:3px}
 .tabs button{border:0;background:none;border-radius:999px;padding:6px 2px;font-weight:700;font-size:11.5px;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:4px;min-width:0}
 .tabs button span.lbl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tabs button.on{background:var(--card-hi);color:var(--fg)}
@@ -142,13 +142,14 @@ legend{font-size:11.5px;font-weight:700;color:var(--muted);padding:0;margin-bott
 .btn.danger.armed{background:var(--urgent);color:#fff;border-color:var(--urgent)}
 
 /* Breit (z. B. im Browser geöffnet oder Seitenleiste aufgezogen): klassisches Kanban */
+@media (max-width:420px){.tabs .dot{display:none}.tabs button{font-size:11px}}
 @media (min-width:760px){
   .app{padding:20px 24px}
   .stats{grid-template-columns:repeat(4,minmax(0,160px))}
   .search{flex:1 1 220px}
   .chip{flex:0 0 auto;min-width:150px}
   .tabs{display:none}
-  .board{grid-auto-flow:column;grid-auto-columns:minmax(240px,1fr);align-items:start;overflow-x:auto}
+  .board{grid-auto-flow:column;grid-auto-columns:minmax(210px,1fr);align-items:start;overflow-x:auto}
   .col,.col:not(.active){display:flex;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:10px;min-height:150px}
   .col.drop{border-color:var(--accent)}
   .col-h{display:flex}
@@ -274,6 +275,7 @@ legend{font-size:11.5px;font-weight:700;color:var(--muted);padding:0;margin-bott
 "use strict";
 
 const COLS = [
+  { id: "today", name: "Heute", short: "Heute", c: "var(--high)", next: "progress" },
   { id: "todo", name: "Zu erledigen", short: "Offen", c: "var(--faint)" },
   { id: "progress", name: "In Arbeit", short: "Arbeit", c: "var(--accent)" },
   { id: "review", name: "In Prüfung", short: "Prüfen", c: "var(--review)" },
@@ -297,7 +299,14 @@ const hue = (s) => { let h = 0; for (const ch of String(s)) h = (h * 31 + ch.cha
 let tasks = [];
 let editing = null;
 let draft = null;
-let activeCol = "progress";
+let activeCol = "today";
+
+// „Heute“ steht vorne, der Pfeil führt von dort direkt nach „In Arbeit“
+function nextCol(status) {
+  const i = COLS.findIndex((c) => c.id === status);
+  const c = COLS[i];
+  return c && c.next ? COLS.find((x) => x.id === c.next) : COLS[i + 1];
+}
 
 /* ---------- Speicher: nur localStorage in diesem Browser ---------- */
 
@@ -363,8 +372,7 @@ function cardHTML(t) {
   const prio = t.priority && t.priority !== "normal" ? `<span class="tag ${t.priority}">${t.priority === "urgent" ? ICON.flag : ""}${PRIO[t.priority]}</span>` : "";
   const tot = +t.subTotal || 0, sd = Math.min(+t.subDone || 0, tot);
   const prog = tot ? `<div class="prog" style="--c:${pc}"><div class="bar"><i style="width:${(sd / tot) * 100}%"></i></div>${sd}/${tot}</div>` : "";
-  const idx = COLS.findIndex((c) => c.id === status);
-  const next = COLS[idx + 1];
+  const next = nextCol(status);
   return `<div class="card${done ? " done" : ""}" draggable="true" tabindex="0" role="button" data-id="${esc(t.id)}">
     <div class="tags"><span class="tag" style="--c:${pc}"><span class="dot"></span>${esc(project)}</span>${prio}</div>
     <div class="title">${done ? `<span class="check">${ICON.tick}</span>` : ""}<span>${esc(t.title)}</span></div>
@@ -473,7 +481,7 @@ $("tabs").addEventListener("click", (e) => {
 $("board").addEventListener("click", (e) => {
   const byId = (id) => tasks.find((t) => t.id === id);
   const nx = e.target.closest("[data-next]");
-  if (nx) { const t = byId(nx.dataset.next); const i = COLS.findIndex((c) => c.id === (t.status || "todo")); return moveTo(t, COLS[i + 1].id); }
+  if (nx) { const t = byId(nx.dataset.next); return moveTo(t, nextCol(t.status || "todo").id); }
   if (e.target.closest("[data-cleanup]")) {
     tasks = tasks.filter((t) => !(t.status === "done" && Date.now() - (t.doneAt || 0) > 14 * 864e5));
     persist(); flash("Alte erledigte Aufgaben entfernt."); return render();
