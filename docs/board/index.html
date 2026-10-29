@@ -46,7 +46,7 @@ h1{margin:0;font-size:24px;font-weight:800;letter-spacing:-.02em}
 .icon-btn{border:1px solid var(--line);background:var(--panel);color:var(--muted);width:36px;height:36px;border-radius:999px;display:grid;place-items:center}
 .icon-btn:hover{color:var(--fg);background:var(--card-hi)}
 .btn-primary{border:0;background:var(--accent);color:var(--accent-ink);font-weight:700;padding:8px 14px;border-radius:999px;display:flex;gap:6px;align-items:center;box-shadow:0 6px 18px -8px var(--accent)}
-.btn{border:1px solid var(--line);background:var(--card);padding:7px 12px;border-radius:999px;font-weight:600;white-space:nowrap}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card);padding:7px 12px;border-radius:999px;font-weight:600;white-space:nowrap}
 .btn:hover{background:var(--card-hi)}
 
 .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
@@ -118,6 +118,24 @@ label{display:grid;gap:4px;font-size:11.5px;font-weight:600;color:var(--muted)}
 .form input,.form select,.form textarea{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:8px 9px;width:100%;min-width:0}
 .form textarea{font:inherit;font-weight:400;color:var(--fg);resize:vertical;min-height:96px;line-height:1.45}
 dialog{max-height:calc(100vh - 24px);overflow-y:auto}
+fieldset{border:0;margin:0;padding:0;display:grid;gap:8px;min-width:0}
+legend{font-size:11.5px;font-weight:700;color:var(--muted);padding:0;margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em}
+#fontList{display:grid;gap:6px}
+.font-opt{display:flex;align-items:center;gap:10px;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:9px 12px;cursor:pointer;color:var(--fg);font-size:15px;font-weight:500}
+.font-opt small{margin-left:auto;font-family:var(--ui-font);font-size:11px;color:var(--muted);font-weight:600}
+.font-opt input{accent-color:var(--accent);margin:0;width:auto;flex:none}
+.font-opt:has(input:checked){border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--card))}
+.seg2{display:grid;grid-template-columns:1fr 1fr;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:3px;gap:3px}
+.seg2 button{border:0;background:none;border-radius:999px;padding:7px;font-weight:700;font-size:12px;color:var(--muted)}
+.seg2 button.on{background:var(--card-hi);color:var(--fg);box-shadow:0 0 0 1px var(--line)}
+.picker{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+#wheel{width:180px;height:180px;max-width:100%;border-radius:50%;cursor:crosshair;touch-action:none;flex:none}
+.picker-side{flex:1;min-width:150px;display:grid;gap:10px}
+.picker-side input[type=range]{width:100%;accent-color:var(--accent);padding:0}
+.swatch-row{display:flex;gap:8px;align-items:center}
+.swatch{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);flex:none}
+#hex{font-family:var(--mono);text-transform:uppercase}
+.hint{margin:0;font-size:11.5px;color:var(--muted)}
 .pair{display:flex;gap:6px}
 .form-actions{display:flex;gap:6px;justify-content:flex-end;margin-top:2px;flex-wrap:wrap}
 .btn.danger{color:var(--urgent);margin-right:auto}
@@ -186,12 +204,43 @@ dialog{max-height:calc(100vh - 24px);overflow-y:auto}
         <button id="zoomReset" title="Auf 100 % zurücksetzen">100 %</button>
         <button id="zoomIn" aria-label="Größer">+</button>
       </div>
+      <button class="btn" id="customBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.6-.8 1.6-1.6 0-.5-.2-.8-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.7-1.6 1.6-1.6H16a5 5 0 0 0 5-5c0-4-4-7.4-9-7.4z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10.5" cy="7" r="1"/><circle cx="15" cy="7.5" r="1"/></svg>Anpassen</button>
       <button class="btn" id="exportBtn">Sicherung speichern</button>
       <button class="btn" id="importBtn">Sicherung laden</button>
       <input type="file" id="importFile" accept="application/json,.json" hidden>
     </div>
   </footer>
 </div>
+
+<dialog id="custom" aria-labelledby="customTitle">
+  <div class="form">
+    <h2 id="customTitle">Anpassen</h2>
+    <fieldset class="fonts">
+      <legend>Schriftart</legend>
+      <div id="fontList"></div>
+    </fieldset>
+    <fieldset>
+      <legend>Farben</legend>
+      <div class="seg2" role="tablist">
+        <button type="button" data-target="fg" class="on">Schriftfarbe</button>
+        <button type="button" data-target="line">Rand der Boxen</button>
+      </div>
+      <div class="picker">
+        <canvas id="wheel" width="400" height="400" aria-label="Farbkreis: klicken oder ziehen, um eine Farbe zu wählen"></canvas>
+        <div class="picker-side">
+          <label>Helligkeit<input type="range" id="bright" min="0" max="100" value="100"></label>
+          <div class="swatch-row"><span class="swatch" id="swatch"></span><input id="hex" maxlength="7" spellcheck="false" aria-label="Farbcode"></div>
+          <button type="button" class="btn" id="colorReset">Standardfarbe</button>
+        </div>
+      </div>
+      <p class="hint">Die Farben gelten für das <b id="themeName">dunkle</b> Design. Für das andere Design kannst du eigene Farben wählen.</p>
+    </fieldset>
+    <div class="form-actions">
+      <button type="button" class="btn danger" id="customResetAll">Alles zurücksetzen</button>
+      <button type="button" class="btn-primary" id="customDone">Fertig</button>
+    </div>
+  </div>
+</dialog>
 
 <dialog id="dlg">
   <form class="form" id="form" method="dialog">
@@ -489,9 +538,9 @@ $("themeBtn").onclick = () => {
   const next = currentTheme() === "dark" ? "light" : "dark";
   document.documentElement.dataset.theme = next;
   try { localStorage.setItem(LS + "-theme", next); } catch (e) {}
-  showThemeBtn();
+  showThemeBtn(); applyCustom();
 };
-systemDark.addEventListener("change", showThemeBtn);
+systemDark.addEventListener("change", () => { showThemeBtn(); applyCustom(); });
 showThemeBtn();
 
 /* ---------- Größe ---------- */
@@ -515,6 +564,120 @@ $("zoomIn").onclick = () => stepZoom(1);
 $("zoomOut").onclick = () => stepZoom(-1);
 $("zoomReset").onclick = () => { zoom = 1; applyZoom(); };
 applyZoom();
+
+/* ---------- Anpassen: Schriftart und Farben ---------- */
+
+// Nur Schriften, die auf Windows, Mac oder Handy schon vorhanden sind (nichts wird nachgeladen)
+const FONTS = [
+  { id: "standard", name: "Standard", note: "System", stack: 'ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif' },
+  { id: "klassisch", name: "Klassisch", note: "Serifen", stack: 'Georgia,"Iowan Old Style","Palatino Linotype",Palatino,"Times New Roman",serif' },
+  { id: "lesbar", name: "Gut lesbar", note: "Breit", stack: 'Verdana,Tahoma,"DejaVu Sans",sans-serif' },
+  { id: "schreibmaschine", name: "Schreibmaschine", note: "Monospace", stack: 'ui-monospace,"Cascadia Mono",Consolas,Menlo,"Courier New",monospace' },
+  { id: "handschrift", name: "Handschrift", note: "Locker", stack: '"Segoe Print","Bradley Hand","Comic Sans MS","Chalkboard SE",cursive' },
+];
+const CUSTOM_KEY = LS + "-custom";
+let custom = { font: "standard", dark: {}, light: {} };
+try { const c = JSON.parse(localStorage.getItem(CUSTOM_KEY) || "null"); if (c && typeof c === "object") custom = { ...custom, ...c, dark: c.dark || {}, light: c.light || {} }; } catch (e) {}
+let target = "fg";
+let hsv = { h: 0, s: 0, v: 1 };
+
+function saveCustom() { try { localStorage.setItem(CUSTOM_KEY, JSON.stringify(custom)); } catch (e) {} }
+function applyCustom() {
+  const root = document.documentElement.style;
+  const f = FONTS.find((x) => x.id === custom.font) || FONTS[0];
+  root.setProperty("--font", f.stack);
+  const c = custom[currentTheme()] || {};
+  c.fg ? root.setProperty("--fg", c.fg) : root.removeProperty("--fg");
+  c.line ? root.setProperty("--line", c.line) : root.removeProperty("--line");
+}
+document.documentElement.style.setProperty("--ui-font", FONTS[0].stack);
+
+function hsvToHex({ h, s, v }) {
+  const f = (n) => { const k = (n + h / 60) % 6; return v - v * s * Math.max(0, Math.min(k, 4 - k, 1)); };
+  return "#" + [f(5), f(3), f(1)].map((x) => Math.round(x * 255).toString(16).padStart(2, "0")).join("").toUpperCase();
+}
+function hexToHsv(hex) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim()); if (!m) return null;
+  const n = parseInt(m[1], 16), r = (n >> 16) / 255, g = ((n >> 8) & 255) / 255, b = (n & 255) / 255;
+  const max = Math.max(r, g, b), d = max - Math.min(r, g, b);
+  let h = 0;
+  if (d) h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return { h: (h * 60 + 360) % 360, s: max ? d / max : 0, v: max };
+}
+function cssColorToHex(c) {
+  const m = c.match(/\d+(\.\d+)?/g); if (!m) return "#888888";
+  return "#" + m.slice(0, 3).map((x) => Math.round(+x).toString(16).padStart(2, "0")).join("").toUpperCase();
+}
+
+const wheel = $("wheel"), wctx = wheel.getContext("2d");
+let wheelImg = null;
+function drawWheel() {
+  const W = wheel.width, R = W / 2;
+  if (!wheelImg || wheelImg.v !== hsv.v) {
+    const img = wctx.createImageData(W, W);
+    for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) {
+      const dx = x - R + 0.5, dy = y - R + 0.5, r = Math.hypot(dx, dy);
+      if (r > R) continue;
+      const hex = hsvToHex({ h: (Math.atan2(dy, dx) * 180 / Math.PI + 360) % 360, s: Math.min(1, r / R), v: hsv.v });
+      const n = parseInt(hex.slice(1), 16), i = (y * W + x) * 4;
+      img.data[i] = n >> 16; img.data[i + 1] = (n >> 8) & 255; img.data[i + 2] = n & 255;
+      img.data[i + 3] = r > R - 1.5 ? Math.round(255 * (R - r) / 1.5) : 255;
+    }
+    wheelImg = { v: hsv.v, img };
+  }
+  wctx.putImageData(wheelImg.img, 0, 0);
+  const a = hsv.h * Math.PI / 180, mx = R + Math.cos(a) * hsv.s * R, my = R + Math.sin(a) * hsv.s * R;
+  wctx.lineWidth = 6; wctx.strokeStyle = "#fff"; wctx.beginPath(); wctx.arc(mx, my, 13, 0, 7); wctx.stroke();
+  wctx.lineWidth = 2; wctx.strokeStyle = "#000"; wctx.beginPath(); wctx.arc(mx, my, 17, 0, 7); wctx.stroke();
+}
+function currentColorOf(t) {
+  if (custom[currentTheme()][t]) return custom[currentTheme()][t];
+  const probe = document.createElement("span"); probe.style.color = `var(--${t})`; document.body.appendChild(probe);
+  const c = getComputedStyle(probe).color; probe.remove();
+  return cssColorToHex(c);
+}
+function showPicker() {
+  document.querySelectorAll(".seg2 button").forEach((b) => b.classList.toggle("on", b.dataset.target === target));
+  const hex = currentColorOf(target);
+  hsv = hexToHsv(hex) || hsv;
+  // Noch keine eigene Farbe: Farbkreis in voller Helligkeit zeigen, sonst wirkt er bei dunklen Standardfarben fast schwarz
+  if (!custom[currentTheme()][target]) hsv = { ...hsv, v: 1 };
+  $("bright").value = Math.round(hsv.v * 100);
+  $("hex").value = hex; $("swatch").style.background = hex;
+  $("themeName").textContent = currentTheme() === "dark" ? "dunkle" : "helle";
+  drawWheel();
+}
+function setColor(hex, fromHexField) {
+  custom[currentTheme()][target] = hex;
+  applyCustom(); saveCustom();
+  $("swatch").style.background = hex;
+  if (!fromHexField) $("hex").value = hex;
+}
+function pickAt(e) {
+  const r = wheel.getBoundingClientRect();
+  const x = (e.clientX - r.left) / r.width * 2 - 1, y = (e.clientY - r.top) / r.height * 2 - 1;
+  hsv = { ...hsv, h: (Math.atan2(y, x) * 180 / Math.PI + 360) % 360, s: Math.min(1, Math.hypot(x, y)) };
+  drawWheel(); setColor(hsvToHex(hsv));
+}
+wheel.addEventListener("pointerdown", (e) => { wheel.setPointerCapture(e.pointerId); pickAt(e); });
+wheel.addEventListener("pointermove", (e) => { if (wheel.hasPointerCapture(e.pointerId)) pickAt(e); });
+$("bright").addEventListener("input", () => { hsv = { ...hsv, v: $("bright").value / 100 }; drawWheel(); setColor(hsvToHex(hsv)); });
+$("hex").addEventListener("input", () => {
+  const v = $("hex").value.trim(), h = hexToHsv(v); if (!h) return;
+  hsv = h; $("bright").value = Math.round(h.v * 100); drawWheel(); setColor("#" + v.replace("#", "").toUpperCase(), true);
+});
+document.querySelectorAll(".seg2 button").forEach((b) => b.addEventListener("click", () => { target = b.dataset.target; showPicker(); }));
+$("colorReset").onclick = () => { delete custom[currentTheme()][target]; applyCustom(); saveCustom(); showPicker(); };
+$("customResetAll").onclick = () => { custom = { font: "standard", dark: {}, light: {} }; applyCustom(); saveCustom(); renderFonts(); showPicker(); };
+$("customDone").onclick = () => $("custom").close();
+
+function renderFonts() {
+  $("fontList").innerHTML = FONTS.map((f) => `<label class="font-opt" style="font-family:${f.stack.replace(/"/g, "&quot;")}">
+    <input type="radio" name="font" value="${f.id}"${f.id === custom.font ? " checked" : ""}>${f.name}<small>${f.note}</small></label>`).join("");
+}
+$("fontList").addEventListener("change", (e) => { custom.font = e.target.value; applyCustom(); saveCustom(); });
+$("customBtn").onclick = () => { renderFonts(); $("custom").showModal(); showPicker(); };
+applyCustom();
 
 tasks = loadTasks();
 render();
