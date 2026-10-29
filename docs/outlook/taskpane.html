@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aufgaben-Board</title>
+<script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="taskpane.css">
+</head>
+<body>
+<div class="app">
+  <header class="head">
+    <div>
+      <h1>Aufgaben</h1>
+      <div class="sub" id="subline">Lade Aufgaben …</div>
+    </div>
+    <button class="btn-primary" id="newTask" aria-label="Neue Aufgabe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span>Neu</span></button>
+  </header>
+
+  <section class="mail" id="mailBox" hidden>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M4 7l8 6 8-6"/></svg>
+    <div class="mail-text"><span>Geöffnete E-Mail</span><b id="mailSubject"></b></div>
+    <button class="btn" id="fromMail">Als Aufgabe</button>
+  </section>
+
+  <section class="stats" aria-label="Kennzahlen">
+    <div class="stat"><span>Offen</span><b id="sOpen">0</b></div>
+    <div class="stat"><span title="Fällig diese Woche">Woche</span><b id="sWeek">0</b></div>
+    <div class="stat" id="sLateBox"><span>Überfällig</span><b id="sLate">0</b></div>
+    <div class="stat"><span title="Erledigt in den letzten 7 Tagen">Erledigt</span><b id="sDone">0</b></div>
+  </section>
+
+  <section class="filters" aria-label="Filter">
+    <label class="search" for="fText"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4-4"/></svg><input id="fText" type="search" placeholder="Suchen"></label>
+    <div class="chip"><select id="fProject" aria-label="Projekt"><option value="">Alle Projekte</option></select></div>
+    <div class="chip"><select id="fPrio" aria-label="Priorität"><option value="">Jede Priorität</option><option value="urgent">Dringend</option><option value="high">Hoch</option><option value="normal">Normal</option></select></div>
+    <div class="chip"><select id="fDue" aria-label="Fälligkeit"><option value="">Jedes Datum</option><option value="today">Heute</option><option value="week">Diese Woche</option><option value="late">Überfällig</option></select></div>
+  </section>
+
+  <nav class="tabs" id="tabs" aria-label="Spalten"></nav>
+  <section id="board" class="board" aria-label="Board"></section>
+  <p class="note" id="note"></p>
+</div>
+
+<dialog id="dlg">
+  <form class="form" id="form" method="dialog">
+    <h2 id="dlgTitle">Neue Aufgabe</h2>
+    <label>Titel<input id="tTitle" required maxlength="140" placeholder="z. B. Angebot an Kunde schicken"></label>
+    <div class="row2">
+      <label>Projekt<input id="tProject" list="projList" maxlength="40" placeholder="z. B. Büro"></label>
+      <label>Person (Kürzel)<input id="tWho" maxlength="3" placeholder="JA"></label>
+    </div>
+    <datalist id="projList"></datalist>
+    <div class="row2">
+      <label>Status<select id="tStatus"></select></label>
+      <label>Priorität<select id="tPrio"><option value="normal">Normal</option><option value="high">Hoch</option><option value="urgent">Dringend</option></select></label>
+    </div>
+    <div class="row2">
+      <label>Fällig am<input id="tDue" type="date"></label>
+      <label>Teilschritte (erledigt / gesamt)
+        <span class="pair"><input id="tSubDone" type="number" min="0" max="99" placeholder="0" aria-label="Erledigte Teilschritte"><input id="tSubTotal" type="number" min="0" max="99" placeholder="0" aria-label="Teilschritte gesamt"></span>
+      </label>
+    </div>
+    <p class="linked" id="tMail" hidden></p>
+    <div class="form-actions">
+      <button type="button" class="btn danger" id="tDelete" hidden>Löschen</button>
+      <button type="button" class="btn" id="tCancel">Abbrechen</button>
+      <button type="submit" class="btn-primary" id="tSave">Speichern</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="taskpane.js"></script>
+</body>
+</html>

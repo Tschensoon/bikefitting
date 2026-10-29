@@ -1,0 +1,130 @@
+/* Schmale Outlook-Seitenleiste: eine Spalte per Reiter. Ab 760px Breite alle Spalten nebeneinander. */
+:root{
+  --bg:#0d0f14; --panel:#14171f; --card:#1a1e28; --card-hi:#202533;
+  --line:#262b38; --fg:#e9ecf3; --muted:#8a91a3; --faint:#5b6275;
+  --accent:#3b82f6; --accent-ink:#fff;
+  --urgent:#f0566a; --high:#f59e0b; --ok:#22c55e; --review:#a855f7;
+  --font:"Manrope",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:12px;
+  color-scheme:dark;
+}
+/* Helles Outlook-Design: wird per JS aus dem Office-Theme gesetzt (data-theme), sonst Systemeinstellung */
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){
+  --bg:#f3f5f9; --panel:#ffffff; --card:#ffffff; --card-hi:#f3f5fa;
+  --line:#dde2ec; --fg:#141824; --muted:#5d6579; --faint:#8b93a6;
+  --accent:#2563eb; --urgent:#dc2f45; --high:#c27406; --ok:#16a34a; --review:#9333ea;
+  color-scheme:light}}
+:root[data-theme="light"]{
+  --bg:#f3f5f9; --panel:#ffffff; --card:#ffffff; --card-hi:#f3f5fa;
+  --line:#dde2ec; --fg:#141824; --muted:#5d6579; --faint:#8b93a6;
+  --accent:#2563eb; --urgent:#dc2f45; --high:#c27406; --ok:#16a34a; --review:#9333ea;
+  color-scheme:light}
+
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:13px;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+[hidden]{display:none!important}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+svg{width:16px;height:16px;flex:none}
+
+.app{display:flex;flex-direction:column;gap:12px;padding:14px 12px 20px}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:10px}
+h1{margin:0;font-size:24px;font-weight:800;letter-spacing:-.02em}
+.sub{color:var(--muted);margin-top:2px;font-size:12px}
+.btn-primary{border:0;background:var(--accent);color:var(--accent-ink);font-weight:700;padding:8px 14px;border-radius:999px;display:flex;gap:6px;align-items:center;box-shadow:0 6px 18px -8px var(--accent)}
+.btn{border:1px solid var(--line);background:var(--card);padding:7px 12px;border-radius:999px;font-weight:600;white-space:nowrap}
+.btn:hover{background:var(--card-hi)}
+
+.mail{display:flex;align-items:center;gap:10px;background:color-mix(in srgb,var(--accent) 10%,var(--panel));border:1px solid color-mix(in srgb,var(--accent) 35%,var(--line));border-radius:var(--r);padding:10px 12px;color:var(--accent)}
+.mail-text{flex:1;min-width:0;display:grid;color:var(--fg)}
+.mail-text span{font-size:11px;color:var(--muted);font-weight:600}
+.mail-text b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:8px 10px;min-width:0}
+.stat span{display:block;color:var(--muted);font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat b{display:block;font-size:19px;font-weight:800;margin-top:2px;font-variant-numeric:tabular-nums}
+.stat.warn b{color:var(--urgent)}
+
+.filters{display:flex;flex-wrap:wrap;gap:6px}
+.search{flex:1 1 100%;display:flex;align-items:center;gap:8px;padding:7px 12px;color:var(--faint);background:var(--panel);border:1px solid var(--line);border-radius:999px}
+.search input{flex:1;min-width:0;border:0;background:none;outline:none;color:var(--fg)}
+.search input::placeholder{color:var(--faint)}
+.chip{flex:1 1 0;min-width:0;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:5px 10px}
+.chip select{appearance:none;-webkit-appearance:none;border:0;background:none;font-weight:600;font-size:12px;width:100%;cursor:pointer;outline:none}
+.chip select option{background:var(--card);color:var(--fg)}
+.chip.on{border-color:var(--accent);color:var(--accent)}
+
+.tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:3px}
+.tabs button{border:0;background:none;border-radius:999px;padding:6px 2px;font-weight:700;font-size:11.5px;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:4px;min-width:0}
+.tabs button span.lbl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tabs button.on{background:var(--card-hi);color:var(--fg)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--c);flex:none}
+.count{font-size:10.5px;color:var(--muted);background:var(--card-hi);border-radius:999px;padding:1px 7px;font-variant-numeric:tabular-nums}
+.tabs .count{background:none;padding:0}
+
+.board{display:grid;gap:12px}
+.col{display:flex;flex-direction:column;gap:8px}
+.col:not(.active){display:none}
+.col-h{display:none;align-items:center;gap:8px;padding:2px 4px;font-weight:700}
+.col-h .add{margin-left:auto;border:0;background:none;color:var(--muted);font-size:17px;line-height:1;padding:2px 6px;border-radius:6px}
+.empty{color:var(--faint);font-size:12px;text-align:center;padding:18px 8px;border:1px dashed var(--line);border-radius:var(--r)}
+.col-foot{display:flex;justify-content:center}
+.col-foot button{border:0;background:none;color:var(--muted);font-size:12px;text-decoration:underline;text-underline-offset:3px}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:11px;display:flex;flex-direction:column;gap:9px;cursor:pointer}
+.card:hover{background:var(--card-hi)}
+.card.dragging{opacity:.4}
+.tags{display:flex;gap:5px;flex-wrap:wrap}
+.tag{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:999px;background:color-mix(in srgb,var(--c) 16%,transparent);color:color-mix(in srgb,var(--c) 70%,var(--fg));max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tag.urgent{--c:var(--urgent)} .tag.high{--c:var(--high)}
+.tag svg{width:10px;height:10px}
+.title{font-weight:700;font-size:13.5px;line-height:1.35;display:flex;gap:8px}
+.card.done .title{color:var(--muted)}
+.check{flex:none;width:17px;height:17px;border-radius:50%;background:var(--accent);display:grid;place-items:center;margin-top:1px}
+.check svg{width:10px;height:10px;color:#fff}
+.prog{display:flex;align-items:center;gap:8px;font-size:10.5px;color:var(--muted);font-family:var(--mono)}
+.bar{flex:1;height:4px;border-radius:4px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--c);border-radius:4px}
+.meta{display:flex;align-items:center;gap:10px;font-size:11.5px;color:var(--muted)}
+.meta > span{display:flex;gap:4px;align-items:center}
+.meta svg{width:12px;height:12px}
+.meta .today{color:var(--accent);font-weight:700}
+.meta .late{color:var(--urgent);font-weight:700}
+.meta .right{margin-left:auto;display:flex;gap:6px;align-items:center}
+.mini{border:1px solid var(--line);background:none;border-radius:999px;height:24px;min-width:24px;padding:0 6px;display:grid;place-items:center;color:var(--muted)}
+.mini:hover{color:var(--fg);background:var(--card-hi)}
+.mini svg{width:13px;height:13px}
+.avatar{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:9.5px;font-weight:800;color:#fff;background:var(--c)}
+
+.note{font-size:11.5px;color:var(--faint);margin:0}
+
+dialog{border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:16px;padding:0;width:calc(100vw - 24px);max-width:460px}
+dialog::backdrop{background:rgba(5,7,12,.6)}
+.form{display:grid;gap:10px;padding:16px}
+.form h2{margin:0 0 2px;font-size:17px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+label{display:grid;gap:4px;font-size:11.5px;font-weight:600;color:var(--muted)}
+.form input,.form select{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:8px 9px;width:100%;min-width:0}
+.pair{display:flex;gap:6px}
+.linked{margin:0;font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center}
+.form-actions{display:flex;gap:6px;justify-content:flex-end;margin-top:2px;flex-wrap:wrap}
+.btn.danger{color:var(--urgent);margin-right:auto}
+.btn.danger.armed{background:var(--urgent);color:#fff;border-color:var(--urgent)}
+
+/* Breit (z. B. im Browser geöffnet oder Seitenleiste aufgezogen): klassisches Kanban */
+@media (min-width:760px){
+  .app{padding:20px 24px}
+  .stats{grid-template-columns:repeat(4,minmax(0,160px))}
+  .search{flex:1 1 220px}
+  .chip{flex:0 0 auto;min-width:150px}
+  .tabs{display:none}
+  .board{grid-auto-flow:column;grid-auto-columns:minmax(240px,1fr);align-items:start;overflow-x:auto}
+  .col,.col:not(.active){display:flex;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:10px;min-height:150px}
+  .col.drop{border-color:var(--accent)}
+  .col-h{display:flex}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
