@@ -993,7 +993,27 @@ $("fontList").addEventListener("change", (e) => { custom.font = e.target.value; 
 $("customBtn").onclick = () => { renderFonts(); $("custom").showModal(); showPicker(); };
 applyCustom();
 
+/* ---------- Fällige Aufgaben automatisch nach „Heute“ ---------- */
+
+// Aus „Zu erledigen“ wandert alles, was heute fällig oder überfällig ist. Angefangene oder erledigte Aufgaben bleiben, wo sie sind.
+let lastDay = "";
+function moveDueToToday() {
+  const today = isoOf(new Date());
+  const due = tasks.filter((t) => (t.status || "todo") === "todo" && t.due && t.due <= today);
+  if (due.length) {
+    tasks = tasks.map((t) => (due.includes(t) ? { ...t, status: "today" } : t));
+    persist();
+    flash(`${due.length} ${due.length === 1 ? "fällige Aufgabe" : "fällige Aufgaben"} nach „Heute“ verschoben.`);
+  }
+  if (due.length || today !== lastDay) render();
+  lastDay = today;
+}
+// Auch wenn das Board über Nacht offen bleibt oder du zum Tab zurückkehrst
+document.addEventListener("visibilitychange", () => { if (!document.hidden) moveDueToToday(); });
+setInterval(moveDueToToday, 5 * 60 * 1000);
+
 tasks = loadTasks();
+moveDueToToday();
 render();
 </script>
 </body>
