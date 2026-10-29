@@ -505,6 +505,7 @@ $("form").addEventListener("submit", (e) => {
     doneAt: status === "done" ? prev?.doneAt || Date.now() : 0,
   });
   activeCol = status; saveUi();
+  finishNoteConversion();
   $("dlg").close(); render();
 });
 $("tCancel").onclick = () => $("dlg").close();
@@ -647,20 +648,30 @@ $("noteDelete").onclick = () => {
   loadNote([...notes].sort((a, b) => b.updatedAt - a.updatedAt)[0]?.id ?? null);
   showNoteState("Notiz gelöscht.");
 };
-// Erste Zeile wird Titel, der Rest kommt in die Notizen der Aufgabe. Die Notiz wird danach entfernt.
+// Erste Zeile wird Titel, der Rest kommt in die Notizen der Aufgabe.
+// Die Notiz wird erst entfernt, wenn die neue Aufgabe gespeichert ist. Bei „Abbrechen“ bleibt sie erhalten.
+let pendingNote = null;
 $("noteToTask").onclick = () => {
   const text = $("noteText").value.trim();
   if (!text) { showNoteState("Die Notiz ist leer."); return; }
+  if (noteDirty() && !saveNote()) return;
   const [first, ...rest] = text.split("\n");
-  const task = { id: newId(), title: first.trim().slice(0, 140) || "Neue Aufgabe", notes: rest.join("\n").trim(), project: $("fProject").value || "Allgemein", who: "", status: "today", priority: "normal", due: "", subDone: 0, subTotal: 0, doneAt: 0 };
-  if (noteId) { notes = notes.filter((n) => n.id !== noteId); saveNotes(); showNotesCount(); }
-  noteId = null; noteSaved = ""; $("noteText").value = "";
+  pendingNote = noteId;
   $("notesDlg").close();
-  upsert(task);
-  activeCol = "today"; saveUi(); render();
-  flash("Notiz in eine Aufgabe umgewandelt.");
-  openDlg(task);
+  openDlg(null, { title: first.trim().slice(0, 140), notes: rest.join("\n").trim(), status: "today" });
 };
+function finishNoteConversion() {
+  if (!pendingNote) return;
+  notes = notes.filter((n) => n.id !== pendingNote); saveNotes(); showNotesCount();
+  pendingNote = null; noteId = null; noteSaved = "";
+  flash("Notiz in eine Aufgabe umgewandelt.");
+}
+// Aufgabenfenster ohne Speichern geschlossen: zurück zur unveränderten Notiz
+$("dlg").addEventListener("close", () => {
+  if (!pendingNote) return;
+  const id = pendingNote; pendingNote = null;
+  $("notesDlg").showModal(); loadNote(id);
+});
 showNotesCount();
 
 /* ---------- Sicherung ---------- */
