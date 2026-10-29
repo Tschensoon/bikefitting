@@ -159,6 +159,41 @@ legend{font-size:11.5px;font-weight:700;color:var(--muted);padding:0;margin-bott
 #notesBtn{padding:8px 12px}
 #notesBtn .count{background:var(--card-hi)}
 dialog.wide{max-width:720px}
+dialog.xl{max-width:1180px}
+#calBtn{padding:8px 12px}
+.cal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.cal-nav{display:flex;align-items:center;gap:6px}
+.cal-nav h2{margin:0 0 0 6px;font-size:20px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-top:1px solid var(--line);border-left:1px solid var(--line);border-radius:10px;overflow:hidden}
+.cal-wd{font-size:11px;font-weight:700;color:var(--muted);padding:6px 8px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--card)}
+.cal-cell{min-height:104px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:4px;display:flex;flex-direction:column;gap:3px;min-width:0;cursor:pointer;background:var(--panel)}
+.cal-cell:hover{background:var(--card-hi)}
+.cal-cell.weekend{background:color-mix(in srgb,var(--card) 60%,var(--panel))}
+.cal-cell.other .cal-num{color:var(--faint)}
+.cal-cell.sel{box-shadow:inset 0 0 0 2px var(--accent)}
+.cal-num{font-size:12px;font-weight:700;padding:2px 4px;align-self:flex-start;border-radius:999px;font-variant-numeric:tabular-nums}
+.cal-cell.today .cal-num{background:var(--accent);color:var(--accent-ink);min-width:22px;text-align:center}
+.cal-ev{display:block;width:100%;text-align:left;border:0;border-left:3px solid var(--c);background:color-mix(in srgb,var(--c) 16%,transparent);color:var(--fg);font-size:11.5px;font-weight:600;padding:2px 6px;border-radius:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-ev:hover{background:color-mix(in srgb,var(--c) 28%,transparent)}
+.cal-ev.done{text-decoration:line-through;color:var(--muted)}
+.cal-ev.late{border-left-color:var(--urgent)}
+.cal-more{font-size:11px;color:var(--muted);padding:0 6px;border:0;background:none;text-align:left}
+.cal-dots{display:none;gap:3px;flex-wrap:wrap;padding:0 4px}
+.cal-dots i{width:6px;height:6px;border-radius:50%;background:var(--c)}
+.cal-day{display:none}
+.cal-day h3{margin:4px 0 8px;font-size:14px}
+.cal-day ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.cal-day .cal-ev{font-size:13px;padding:8px 10px;border-radius:8px}
+@media (max-width:620px){
+  #calBtn span{display:none}
+  .cal-mon{display:none}
+  .cal-cell{min-height:52px;padding:3px}
+  .cal-ev,.cal-more{display:none}
+  .cal-dots{display:flex}
+  .cal-day{display:block}
+  .cal-day .cal-ev{display:block}
+  .cal-nav h2{font-size:16px}
+}
 .notes-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .notes-head h2{margin:0}
 .notes-layout{display:grid;grid-template-columns:200px minmax(0,1fr);gap:10px;min-height:300px}
@@ -199,6 +234,7 @@ dialog.wide{max-width:720px}
     </div>
     <div class="head-actions">
       <button class="icon-btn" id="themeBtn" aria-label="Hell oder dunkel umschalten"></button>
+      <button class="btn" id="calBtn" aria-label="Kalender öffnen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M9 3v4M15 3v4"/></svg><span>Kalender</span></button>
       <button class="btn" id="notesBtn" aria-label="Notizen öffnen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg><span>Notiz</span><span class="count" id="notesCount" hidden></span></button>
     <button class="btn-primary" id="newTask" aria-label="Neue Aufgabe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span>Neu</span></button>
     </div>
@@ -236,6 +272,25 @@ dialog.wide{max-width:720px}
     </div>
   </footer>
 </div>
+
+<dialog id="calDlg" class="xl" aria-labelledby="calTitle">
+  <div class="form">
+    <div class="cal-head">
+      <div class="cal-nav">
+        <button type="button" class="btn" id="calToday">Heute</button>
+        <button type="button" class="icon-btn" id="calPrev" aria-label="Vorheriger Monat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+        <button type="button" class="icon-btn" id="calNext" aria-label="Nächster Monat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+        <h2 id="calTitle">Monat</h2>
+      </div>
+      <button type="button" class="btn" id="calClose">Schließen</button>
+    </div>
+    <div class="cal-wrap">
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+    <div class="cal-day" id="calDay"></div>
+    <p class="hint" id="calHint"></p>
+  </div>
+</dialog>
 
 <dialog id="notesDlg" class="wide" aria-labelledby="notesTitle">
   <div class="form">
@@ -575,6 +630,73 @@ $("fText").addEventListener("input", render);
 
 function saveUi() { try { localStorage.setItem(LS + "-tab", activeCol); } catch (e) {} }
 try { activeCol = localStorage.getItem(LS + "-tab") || activeCol; } catch (e) {}
+
+/* ---------- Kalender (Monatsansicht) ---------- */
+
+const WEEKDAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
+const isoOf = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+let calMonth = new Date(); calMonth.setDate(1);
+let calSel = isoOf(new Date());
+let fromCalendar = false;
+
+function calEvent(t, todayIso) {
+  const done = t.status === "done", late = !done && t.due < todayIso;
+  return `<button type="button" class="cal-ev${done ? " done" : ""}${late ? " late" : ""}" style="--c:${hue(t.project || "Allgemein")}" data-task="${esc(t.id)}" title="${esc(t.title)} · ${esc(t.project || "Allgemein")}">${esc(t.title)}</button>`;
+}
+function renderCalendar() {
+  const todayIso = isoOf(new Date());
+  const y = calMonth.getFullYear(), m = calMonth.getMonth();
+  $("calTitle").textContent = calMonth.toLocaleDateString("de-DE", { month: "long", year: "numeric" });
+  const byDay = {};
+  for (const t of tasks) if (t.due) (byDay[t.due] ||= []).push(t);
+  for (const k in byDay) byDay[k].sort((a, b) => (a.status === "done") - (b.status === "done") || (PRIO_RANK[a.priority] ?? 2) - (PRIO_RANK[b.priority] ?? 2));
+  // Raster beginnt am Montag vor dem Monatsersten, immer 6 Wochen
+  const start = new Date(y, m, 1); start.setDate(1 - ((start.getDay() + 6) % 7));
+  let html = WEEKDAYS.map((d) => `<div class="cal-wd">${d}</div>`).join("");
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(start); d.setDate(start.getDate() + i);
+    const iso = isoOf(d), list = byDay[iso] || [], dow = (d.getDay() + 6) % 7;
+    const cls = ["cal-cell", d.getMonth() !== m && "other", dow > 4 && "weekend", iso === todayIso && "today", iso === calSel && "sel"].filter(Boolean).join(" ");
+    html += `<div class="${cls}" data-day="${iso}" role="button" tabindex="0" aria-label="${d.toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" })}, ${list.length} Aufgaben">
+      <span class="cal-num">${d.getDate()}${d.getDate() === 1 ? `<span class="cal-mon">. ${d.toLocaleDateString("de-DE", { month: "short" })}</span>` : ""}</span>
+      ${list.slice(0, 3).map((t) => calEvent(t, todayIso)).join("")}
+      ${list.length > 3 ? `<button type="button" class="cal-more" data-more="${iso}">+${list.length - 3} weitere</button>` : ""}
+      ${list.length ? `<span class="cal-dots">${list.slice(0, 6).map((t) => `<i style="--c:${t.status === "done" ? "var(--faint)" : hue(t.project || "Allgemein")}"></i>`).join("")}</span>` : ""}
+    </div>`;
+  }
+  $("calGrid").innerHTML = html;
+  const sel = byDay[calSel] || [];
+  const selDate = new Date(calSel + "T00:00:00");
+  $("calDay").innerHTML = `<h3>${selDate.toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" })}</h3>
+    <ul>${sel.map((t) => `<li>${calEvent(t, todayIso)}</li>`).join("") || '<li class="note">Keine Aufgaben. Tippe den Tag nochmal an, um eine anzulegen.</li>'}</ul>`;
+  const undated = tasks.filter((t) => !t.due && t.status !== "done").length;
+  $("calHint").textContent = (undated ? `${undated} offene ${undated === 1 ? "Aufgabe hat" : "Aufgaben haben"} kein Fälligkeitsdatum und ${undated === 1 ? "erscheint" : "erscheinen"} hier nicht. ` : "") + "Klick auf eine Aufgabe öffnet sie, Klick auf einen leeren Tag legt dort eine neue an.";
+}
+function calOpenTask(id) { fromCalendar = true; $("calDlg").close(); openDlg(tasks.find((t) => t.id === id)); }
+function calNewTask(iso) {
+  fromCalendar = true; $("calDlg").close();
+  openDlg(null, { due: iso, status: iso === isoOf(new Date()) ? "today" : "todo" });
+}
+$("calBtn").onclick = () => { renderCalendar(); $("calDlg").showModal(); };
+$("calClose").onclick = () => $("calDlg").close();
+$("calPrev").onclick = () => { calMonth.setMonth(calMonth.getMonth() - 1); renderCalendar(); };
+$("calNext").onclick = () => { calMonth.setMonth(calMonth.getMonth() + 1); renderCalendar(); };
+$("calToday").onclick = () => { calMonth = new Date(); calMonth.setDate(1); calSel = isoOf(new Date()); renderCalendar(); };
+const narrow = window.matchMedia("(max-width:620px)");
+function calClick(e) {
+  const ev = e.target.closest("[data-task]"); if (ev) return calOpenTask(ev.dataset.task);
+  const more = e.target.closest("[data-more]"); if (more) { calSel = more.dataset.more; renderCalendar(); return $("calDay").scrollIntoView({ block: "nearest" }); }
+  const cell = e.target.closest("[data-day]"); if (!cell) return;
+  const iso = cell.dataset.day;
+  // Am Handy: erster Tipp zeigt die Aufgaben des Tages darunter, zweiter legt eine neue an. Am Computer legt ein Klick direkt an.
+  if (narrow.matches && calSel !== iso) { calSel = iso; return renderCalendar(); }
+  calNewTask(iso);
+}
+$("calGrid").addEventListener("click", calClick);
+$("calDay").addEventListener("click", calClick);
+$("calGrid").addEventListener("keydown", (e) => { if ((e.key === "Enter" || e.key === " ") && e.target.dataset.day) { e.preventDefault(); calSel = e.target.dataset.day; calNewTask(calSel); } });
+// Nach dem Bearbeiten aus dem Kalender heraus wieder zum Kalender zurück
+$("dlg").addEventListener("close", () => { if (!fromCalendar) return; fromCalendar = false; renderCalendar(); $("calDlg").showModal(); });
 
 /* ---------- Notizen (getrennt von den Aufgaben gespeichert) ---------- */
 
