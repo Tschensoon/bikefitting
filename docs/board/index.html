@@ -265,6 +265,7 @@ legend{font-size:11.5px;font-weight:700;color:var(--muted);padding:0;margin-bott
     </div>
     <div class="form-actions">
       <button type="button" class="btn danger" id="tDelete" hidden>Löschen</button>
+      <button type="button" class="btn" id="tCopy" hidden title="Aufgabe als neue Karte kopieren"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>Kopieren</button>
       <button type="button" class="btn" id="tCancel">Abbrechen</button>
       <button type="submit" class="btn-primary" id="tSave">Speichern</button>
     </div>
@@ -436,6 +437,7 @@ function openDlg(t, preset) {
   $("tDue").value = v.due || "";
   $("tSubDone").value = v.subDone || "";
   $("tSubTotal").value = v.subTotal || "";
+  $("tCopy").hidden = !t;
   $("tDelete").hidden = !t; $("tDelete").classList.remove("armed"); $("tDelete").textContent = "Löschen";
   $("dlg").showModal(); $("tTitle").focus();
 }
@@ -460,6 +462,28 @@ $("form").addEventListener("submit", (e) => {
   $("dlg").close(); render();
 });
 $("tCancel").onclick = () => $("dlg").close();
+// Kopie aus dem aktuellen Formularinhalt, das Original bleibt unverändert
+$("tCopy").onclick = () => {
+  const status = $("tStatus").value;
+  const copy = {
+    id: newId(),
+    title: ($("tTitle").value.trim() || editing.title) + " (Kopie)",
+    notes: $("tNotes").value.trim(),
+    project: $("tProject").value.trim() || "Allgemein",
+    who: $("tWho").value.trim(),
+    status,
+    priority: $("tPrio").value,
+    due: $("tDue").value || "",
+    subDone: +$("tSubDone").value || 0,
+    subTotal: +$("tSubTotal").value || 0,
+    doneAt: status === "done" ? Date.now() : 0,
+  };
+  $("dlg").close();
+  upsert(copy);
+  activeCol = status; saveUi(); render();
+  flash("Kopie angelegt. Du kannst sie jetzt anpassen.");
+  openDlg(copy);
+};
 $("tDelete").onclick = () => {
   const b = $("tDelete");
   if (!b.classList.contains("armed")) { b.classList.add("armed"); b.textContent = "Wirklich löschen?"; return; }
