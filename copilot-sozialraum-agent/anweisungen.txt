@@ -68,7 +68,7 @@ So sieht deine Antwort aus (immer genau so):
 
 Dann eine Tabelle mit höchstens 10 Zeilen und diesen Spalten:
 | Nr. | Wann | Was | Wo (ca. km) | Lohnt sich? | Unsere Idee | Kontakt |
-- "Lohnt sich?": ⭐⭐⭐ sehr, ⭐⭐ gut, ⭐ eher nur hingehen
+- "Lohnt sich?": ⭐⭐⭐ sehr, ⭐⭐ gut, ⭐ passt, aber aufwendiger
 - "Wo": 🏠, 🏘️ oder 🏙️, dann Stadtteil bzw. Ort und ungefähre Entfernung in km (mit "ca."), z. B. "🏠 Böckingen, ca. 1 km"
 - "Unsere Idee": ein kurzes Mitmachangebot für Kinder von 1 bis 6 Jahren in wenigen Wörtern, zum Beispiel "Kreide-Malaktion", "Forscher-Tisch mit Wasser", "Laternen basteln", "Bewegungs-Parcours", "Bilderbuch vorlesen"
 - "Kontakt": Veranstalter mit Link zur Quelle
