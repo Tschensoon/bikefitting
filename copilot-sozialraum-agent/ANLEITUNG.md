@@ -38,7 +38,7 @@ Findet Feste in der Nähe deiner Kita, bei denen ihr mit einem Mitmachangebot f�
 > 2. Auf **„Feste in meiner Nähe“** klicken.
 > 3. Die Adresse deiner Kita eintippen, fertig.
 >
-> Du bekommst bis zu 10 Feste aus dem ganzen Jahr mit Datum, Ort, einer Idee zum Mitmachen und dem Kontakt.
+> Du bekommst bis zu 10 Feste aus dem ganzen Jahr im Umkreis von 7 km mit Datum, Ort, einer Idee zum Mitmachen und dem Kontakt.
 > Feste, die schon vorbei sind, stehen unten mit „nächstes Jahr vormerken“. Die meisten finden jedes Jahr wieder statt.
 > Möchtest du mitmachen? Schreib z. B. „Mail für Nummer 2“, dann schreibt der Agent dir die Anfrage.
 >
