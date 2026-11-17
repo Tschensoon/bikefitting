@@ -20,6 +20,8 @@ Findet Feste in der Nähe deiner Kita, bei denen ihr mit einem Mitmachangebot f�
 
 3. **Wissen:** Den Schalter **„Websuche“** bzw. **„Im Web suchen“** einschalten. Das ist wichtig, ohne Websuche findet der Agent nichts. Sonst nichts hochladen.
 
+3b. **Code-Interpreter einschalten** (für den Excel-Download): unter „Skills“ bzw. „Funktionen“ → „Hinzufügen“ → **Code-Interpreter**. Ohne ihn kann der Agent keine Excel-Datei erstellen.
+
 4. **Eingabeaufforderungen / Starter** (je Titel + Text):
 | Titel | Text |
 |---|---|
@@ -45,7 +47,7 @@ Findet Feste in der Nähe deiner Kita, bei denen ihr mit einem Mitmachangebot f�
 > Schneller geht es mit allem in einer Nachricht, z. B.: **Kita Sonnenschein, 2, 3**
 >
 > Du bekommst bis zu 10 Feste mit Datum, Ort, einer Idee zum Mitmachen und dem Kontakt.
-> Danach wieder mit einer Zahl antworten: 1 = Anfrage-Mail, 2 = Idee genauer, 3 = neue Suche.
+> Danach wieder mit einer Zahl antworten: 1 = Anfrage-Mail, 2 = Idee genauer, 3 = weitersuchen, 4 = neue Suche, **5 = als Excel-Datei herunterladen**.
 >
 > Bitte vor der Anmeldung immer kurz auf der Seite des Veranstalters prüfen, ob alles stimmt.
 
